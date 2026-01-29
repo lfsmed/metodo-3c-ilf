@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { CreatePatientDialog } from '@/components/admin/CreatePatientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Search, User, Mail, Phone, Calendar, MapPin } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface Patient {
   id: string;
   user_id: string;
@@ -76,11 +76,14 @@ export default function AdminPatients() {
   return (
     <AdminLayout currentPage="/admin/patients">
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold font-display">Pacientes</h1>
-          <p className="text-muted-foreground text-sm">
-            {patients.length} pacientes cadastrados
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold font-display">Pacientes</h1>
+            <p className="text-muted-foreground text-sm">
+              {patients.length} pacientes cadastrados
+            </p>
+          </div>
+          <CreatePatientDialog onPatientCreated={fetchPatients} />
         </div>
 
         <div className="relative">
