@@ -110,7 +110,7 @@ export default function Auth() {
           <img 
             src={logoInstituto} 
             alt="Instituto Luiz Fernando" 
-            className="h-16 mx-auto mb-4"
+            className="h-24 mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold font-display">Método 3C</h1>
           <p className="text-muted-foreground text-sm mt-1">Instituto Luiz Fernando</p>
