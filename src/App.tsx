@@ -13,6 +13,12 @@ import Medications from "./pages/Medications";
 import Questions from "./pages/Questions";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPatients from "./pages/admin/AdminPatients";
+import AdminApplications from "./pages/admin/AdminApplications";
+import AdminFinancial from "./pages/admin/AdminFinancial";
+import AdminMedications from "./pages/admin/AdminMedications";
+import AdminQuestions from "./pages/admin/AdminQuestions";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +38,12 @@ const App = () => (
             <Route path="/medications" element={<Medications />} />
             <Route path="/questions" element={<Questions />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/patients" element={<AdminPatients />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/financial" element={<AdminFinancial />} />
+            <Route path="/admin/medications" element={<AdminMedications />} />
+            <Route path="/admin/questions" element={<AdminQuestions />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

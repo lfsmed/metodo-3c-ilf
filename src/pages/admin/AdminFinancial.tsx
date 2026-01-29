@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/select';
 import { Plus, CreditCard, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 interface Payment {
@@ -35,7 +34,12 @@ interface Payment {
   status: string;
   description: string | null;
   paid_date: string | null;
-  profiles?: { full_name: string };
+  patient_name?: string;
+}
+
+interface Profile {
+  user_id: string;
+  full_name: string;
 }
 
 export default function AdminFinancial() {
@@ -56,13 +60,34 @@ export default function AdminFinancial() {
 
   const fetchPayments = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch payments
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
-        .select('*, profiles!payments_user_id_fkey(full_name)')
+        .select('*')
         .order('due_date', { ascending: false });
 
-      if (error) throw error;
-      setPayments(data || []);
+      if (paymentsError) throw paymentsError;
+
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name');
+
+      if (profilesError) throw profilesError;
+
+      // Create a map
+      const profilesMap = new Map<string, string>();
+      (profilesData || []).forEach((p: Profile) => {
+        profilesMap.set(p.user_id, p.full_name);
+      });
+
+      // Combine data
+      const combinedData = (paymentsData || []).map((payment) => ({
+        ...payment,
+        patient_name: profilesMap.get(payment.user_id) || 'Paciente',
+      }));
+
+      setPayments(combinedData);
     } catch (error) {
       console.error('Error fetching payments:', error);
     } finally {
@@ -246,7 +271,7 @@ export default function AdminFinancial() {
                         <CreditCard className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{payment.profiles?.full_name || 'Paciente'}</p>
+                        <p className="font-medium">{payment.patient_name}</p>
                         <p className="text-lg font-bold text-primary">{formatCurrency(payment.amount)}</p>
                         <p className="text-sm text-muted-foreground">
                           Vencimento: {format(parseISO(payment.due_date), "dd/MM/yyyy")}

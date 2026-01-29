@@ -20,7 +20,12 @@ interface Question {
   response: string | null;
   responded_at: string | null;
   created_at: string;
-  profiles?: { full_name: string };
+  patient_name?: string;
+}
+
+interface Profile {
+  user_id: string;
+  full_name: string;
 }
 
 export default function AdminQuestions() {
@@ -37,13 +42,34 @@ export default function AdminQuestions() {
 
   const fetchQuestions = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch questions
+      const { data: questionsData, error: questionsError } = await supabase
         .from('questions_reports')
-        .select('*, profiles!questions_reports_user_id_fkey(full_name)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setQuestions(data || []);
+      if (questionsError) throw questionsError;
+
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name');
+
+      if (profilesError) throw profilesError;
+
+      // Create a map
+      const profilesMap = new Map<string, string>();
+      (profilesData || []).forEach((p: Profile) => {
+        profilesMap.set(p.user_id, p.full_name);
+      });
+
+      // Combine data
+      const combinedData = (questionsData || []).map((q) => ({
+        ...q,
+        patient_name: profilesMap.get(q.user_id) || 'Paciente',
+      }));
+
+      setQuestions(combinedData);
     } catch (error) {
       console.error('Error fetching questions:', error);
     } finally {
@@ -112,7 +138,7 @@ export default function AdminQuestions() {
             <div>
               <h1 className="text-2xl font-bold font-display">Responder</h1>
               <p className="text-muted-foreground text-sm">
-                {selectedQuestion.profiles?.full_name || 'Paciente'}
+                {selectedQuestion.patient_name}
               </p>
             </div>
             <Button variant="outline" onClick={() => setSelectedQuestion(null)}>
@@ -213,7 +239,7 @@ export default function AdminQuestions() {
                         <div className="flex items-center gap-2 mb-1">
                           <User className="w-3 h-3 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
-                            {question.profiles?.full_name || 'Paciente'}
+                            {question.patient_name}
                           </span>
                           <Badge variant="secondary" className="text-xs">
                             {getTypeLabel(question.type)}
@@ -255,7 +281,7 @@ export default function AdminQuestions() {
                         <div className="flex items-center gap-2 mb-1">
                           <User className="w-3 h-3 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
-                            {question.profiles?.full_name || 'Paciente'}
+                            {question.patient_name}
                           </span>
                           <Badge variant="default" className="text-xs bg-success">
                             Respondida

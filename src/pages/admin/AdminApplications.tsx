@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
   Dialog,
@@ -33,7 +33,12 @@ interface Application {
   application_date: string;
   status: string;
   notes: string | null;
-  profiles?: { full_name: string };
+  patient_name?: string;
+}
+
+interface Profile {
+  user_id: string;
+  full_name: string;
 }
 
 export default function AdminApplications() {
@@ -53,13 +58,34 @@ export default function AdminApplications() {
 
   const fetchApplications = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch applications
+      const { data: appsData, error: appsError } = await supabase
         .from('applications')
-        .select('*, profiles!applications_user_id_fkey(full_name)')
+        .select('*')
         .order('application_date', { ascending: false });
 
-      if (error) throw error;
-      setApplications(data || []);
+      if (appsError) throw appsError;
+
+      // Fetch profiles to get patient names
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name');
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to full_name
+      const profilesMap = new Map<string, string>();
+      (profilesData || []).forEach((p: Profile) => {
+        profilesMap.set(p.user_id, p.full_name);
+      });
+
+      // Combine data
+      const combinedData = (appsData || []).map((app) => ({
+        ...app,
+        patient_name: profilesMap.get(app.user_id) || 'Paciente',
+      }));
+
+      setApplications(combinedData);
     } catch (error) {
       console.error('Error fetching applications:', error);
     } finally {
@@ -206,7 +232,7 @@ export default function AdminApplications() {
                         <Calendar className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{app.profiles?.full_name || 'Paciente'}</p>
+                        <p className="font-medium">{app.patient_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {format(parseISO(app.application_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                         </p>
