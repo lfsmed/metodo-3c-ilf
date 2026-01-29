@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import logo from '@/assets/logo.png';
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -25,13 +26,11 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <span className="text-lg font-bold text-primary-foreground font-display">3C</span>
-          </div>
-          <div className="hidden sm:block">
-            <h1 className="text-lg font-semibold font-display">Método 3C</h1>
-            <p className="text-xs text-muted-foreground">Instituto Luiz Fernando</p>
-          </div>
+          <img 
+            src={logo} 
+            alt="Instituto Luiz Fernando" 
+            className="h-10 w-auto"
+          />
         </div>
 
         <DropdownMenu>
