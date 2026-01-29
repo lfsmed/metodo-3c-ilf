@@ -32,8 +32,8 @@ export function DataCard({
           )}
         </div>
         {Icon && (
-          <div className={cn("p-2 rounded-lg bg-secondary", iconColor)}>
-            <Icon className="w-5 h-5" />
+          <div className={cn("p-2.5 rounded-lg bg-secondary", iconColor)}>
+            <Icon className="w-6 h-6" />
           </div>
         )}
       </div>

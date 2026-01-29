@@ -31,8 +31,8 @@ export function MobileNav() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_8px_hsl(var(--primary))]")} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <item.icon className={cn("w-6 h-6", isActive && "drop-shadow-[0_0_8px_hsl(var(--primary))]")} />
+              <span className="text-xs font-medium">{item.label}</span>
             </button>
           );
         })}
