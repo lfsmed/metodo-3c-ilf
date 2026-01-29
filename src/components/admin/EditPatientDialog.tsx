@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import { AvatarUpload } from './AvatarUpload';
 
 const editPatientSchema = z.object({
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100),
@@ -36,6 +37,7 @@ interface Patient {
   cpf: string | null;
   birth_date: string | null;
   address: string | null;
+  avatar_url?: string | null;
 }
 
 interface EditPatientDialogProps {
@@ -47,6 +49,7 @@ interface EditPatientDialogProps {
 
 export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdated }: EditPatientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -67,6 +70,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
         birth_date: patient.birth_date || '',
         address: patient.address || '',
       });
+      setAvatarUrl(patient.avatar_url || null);
     }
   }, [patient, open, reset]);
 
@@ -93,6 +97,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
             cpf: data.cpf || undefined,
             birth_date: data.birth_date || undefined,
             address: data.address || undefined,
+            avatar_url: avatarUrl,
           }),
         }
       );
@@ -132,6 +137,14 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <AvatarUpload
+            currentAvatarUrl={avatarUrl}
+            userName={patient?.full_name || ''}
+            userId={patient?.user_id}
+            onAvatarChange={setAvatarUrl}
+            disabled={isSubmitting}
+          />
+
           <div className="space-y-2">
             <Label htmlFor="edit_full_name">Nome Completo *</Label>
             <Input

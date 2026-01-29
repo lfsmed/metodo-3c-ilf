@@ -13,6 +13,7 @@ interface CreateUserRequest {
   cpf?: string;
   birth_date?: string;
   address?: string;
+  avatar_url?: string;
 }
 
 Deno.serve(async (req) => {
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CreateUserRequest = await req.json();
-    const { email, password, full_name, phone, cpf, birth_date, address } = body;
+    const { email, password, full_name, phone, cpf, birth_date, address, avatar_url } = body;
 
     // Validate required fields
     if (!email || !password || !full_name) {
@@ -122,6 +123,7 @@ Deno.serve(async (req) => {
       cpf: cpf || null,
       birth_date: birth_date || null,
       address: address || null,
+      avatar_url: avatar_url || null,
     });
 
     if (profileError) {

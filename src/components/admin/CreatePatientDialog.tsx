@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus, Loader2 } from 'lucide-react';
+import { AvatarUpload } from './AvatarUpload';
 
 const createPatientSchema = z.object({
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100),
@@ -36,6 +37,7 @@ interface CreatePatientDialogProps {
 export function CreatePatientDialog({ onPatientCreated }: CreatePatientDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -67,6 +69,7 @@ export function CreatePatientDialog({ onPatientCreated }: CreatePatientDialogPro
             cpf: data.cpf || undefined,
             birth_date: data.birth_date || undefined,
             address: data.address || undefined,
+            avatar_url: avatarUrl || undefined,
           }),
         }
       );
@@ -83,6 +86,7 @@ export function CreatePatientDialog({ onPatientCreated }: CreatePatientDialogPro
       });
 
       reset();
+      setAvatarUrl(null);
       setOpen(false);
       onPatientCreated();
     } catch (error) {
@@ -113,6 +117,13 @@ export function CreatePatientDialog({ onPatientCreated }: CreatePatientDialogPro
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <AvatarUpload
+            currentAvatarUrl={avatarUrl}
+            userName=""
+            onAvatarChange={setAvatarUrl}
+            disabled={isSubmitting}
+          />
+
           <div className="space-y-2">
             <Label htmlFor="full_name">Nome Completo *</Label>
             <Input
