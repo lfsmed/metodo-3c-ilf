@@ -209,6 +209,23 @@ export default function AdminApplications() {
     }
   };
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'Status atualizado com sucesso!' });
+      fetchApplications();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+    }
+  };
+
   const resetForm = () => {
     setSelectedPatient('');
     setApplicationDate('');
@@ -366,7 +383,19 @@ export default function AdminApplications() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge status={app.status} />
+                      <Select
+                        value={app.status}
+                        onValueChange={(value) => handleStatusChange(app.id, value)}
+                      >
+                        <SelectTrigger className="w-32 h-8">
+                          <StatusBadge status={app.status} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="scheduled">Agendada</SelectItem>
+                          <SelectItem value="completed">Realizada</SelectItem>
+                          <SelectItem value="cancelled">Cancelada</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button
                         variant="ghost"
                         size="icon"
