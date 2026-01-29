@@ -8,7 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, User, Mail, Phone, Calendar, MapPin, Pencil } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Search, User, Mail, Phone, Calendar, MapPin, Pencil, Shield } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -23,9 +26,11 @@ interface Patient {
   address: string | null;
   avatar_url: string | null;
   created_at: string;
+  isAdmin?: boolean;
 }
 
 export default function AdminPatients() {
+  const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +38,7 @@ export default function AdminPatients() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
+  const [togglingAdmin, setTogglingAdmin] = useState(false);
 
   useEffect(() => {
     fetchPatients();
@@ -54,18 +60,89 @@ export default function AdminPatients() {
 
   const fetchPatients = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('full_name');
 
-      if (error) throw error;
-      setPatients(data || []);
-      setFilteredPatients(data || []);
+      if (profilesError) throw profilesError;
+
+      // Fetch admin roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (rolesError) throw rolesError;
+
+      const adminUserIds = new Set(rolesData?.map(r => r.user_id) || []);
+
+      // Merge data
+      const patientsWithRoles = (profilesData || []).map(p => ({
+        ...p,
+        isAdmin: adminUserIds.has(p.user_id),
+      }));
+
+      setPatients(patientsWithRoles);
+      setFilteredPatients(patientsWithRoles);
     } catch (error) {
       console.error('Error fetching patients:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleAdminRole = async (patient: Patient) => {
+    setTogglingAdmin(true);
+    try {
+      if (patient.isAdmin) {
+        // Remove admin role
+        const { error } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', patient.user_id)
+          .eq('role', 'admin');
+
+        if (error) throw error;
+
+        toast({
+          title: 'Privilégio removido',
+          description: `${patient.full_name} não é mais administrador.`,
+        });
+      } else {
+        // Add admin role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: patient.user_id, role: 'admin' });
+
+        if (error) throw error;
+
+        toast({
+          title: 'Privilégio concedido',
+          description: `${patient.full_name} agora é administrador.`,
+        });
+      }
+
+      // Refresh data
+      await fetchPatients();
+      
+      // Update selected patient if viewing details
+      if (selectedPatient?.id === patient.id) {
+        setSelectedPatient({
+          ...selectedPatient,
+          isAdmin: !patient.isAdmin,
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling admin role:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível alterar o privilégio de administrador.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTogglingAdmin(false);
     }
   };
 
@@ -162,10 +239,35 @@ export default function AdminPatients() {
                   <span>CPF: {selectedPatient.cpf}</span>
                 </div>
               )}
-              <div className="pt-2">
+              <div className="pt-2 flex items-center gap-3 flex-wrap">
                 <Badge variant="secondary">
                   Cadastrado em {format(parseISO(selectedPatient.created_at), "dd/MM/yyyy", { locale: ptBR })}
                 </Badge>
+                {selectedPatient.isAdmin && (
+                  <Badge className="bg-primary/20 text-primary border-primary/30">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Administrador
+                  </Badge>
+                )}
+              </div>
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <Label htmlFor="admin-toggle" className="font-medium">
+                      Privilégios de Administrador
+                    </Label>
+                  </div>
+                  <Switch
+                    id="admin-toggle"
+                    checked={selectedPatient.isAdmin}
+                    onCheckedChange={() => toggleAdminRole(selectedPatient)}
+                    disabled={togglingAdmin}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Administradores podem gerenciar todos os dados do sistema.
+                </p>
               </div>
             </CardContent>
           </Card>
