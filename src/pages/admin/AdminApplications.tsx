@@ -55,10 +55,27 @@ export default function AdminApplications() {
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState('1x semana');
   const [endDate, setEndDate] = useState('');
+  const [previewDates, setPreviewDates] = useState<Date[]>([]);
 
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  // Update preview dates when recurrence settings change
+  useEffect(() => {
+    if (isRecurring && applicationDate && endDate) {
+      const startDateObj = parseISO(applicationDate);
+      const endDateObj = parseISO(endDate);
+      if (isBefore(startDateObj, endDateObj) || isEqual(startDateObj, endDateObj)) {
+        const dates = generateDates(startDateObj, endDateObj, frequency);
+        setPreviewDates(dates);
+      } else {
+        setPreviewDates([]);
+      }
+    } else {
+      setPreviewDates([]);
+    }
+  }, [isRecurring, applicationDate, endDate, frequency]);
 
   const fetchApplications = async () => {
     try {
@@ -200,6 +217,7 @@ export default function AdminApplications() {
     setIsRecurring(false);
     setFrequency('1x semana');
     setEndDate('');
+    setPreviewDates([]);
   };
 
   if (loading) {
@@ -281,6 +299,18 @@ export default function AdminApplications() {
                         required={isRecurring}
                       />
                     </div>
+                    {previewDates.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Datas que serão criadas ({previewDates.length})</Label>
+                        <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/50 p-2 text-sm space-y-1">
+                          {previewDates.map((date, index) => (
+                            <p key={index} className="text-muted-foreground">
+                              {format(date, "dd/MM/yyyy (EEEE)", { locale: ptBR })}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
                 <div className="space-y-2">
