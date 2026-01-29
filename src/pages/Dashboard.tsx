@@ -92,7 +92,9 @@ export default function Dashboard() {
         pendingPayments: pendingPayments || 0,
         activeMedications: activeMedications || 0,
         pendingQuestions: pendingQuestions || 0,
-        userName: profile?.full_name?.split(' ')[0] || 'Paciente',
+        userName: profile?.full_name 
+          ? profile.full_name.split(' ').slice(0, 3).join(' ')
+          : 'Paciente',
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
