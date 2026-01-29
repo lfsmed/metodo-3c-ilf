@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, CreditCard, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual, isAfter } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 interface Payment {
@@ -53,10 +55,61 @@ export default function AdminFinancial() {
   const [status, setStatus] = useState('pending');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState('1x semana');
+  const [endDate, setEndDate] = useState('');
+  const [previewDates, setPreviewDates] = useState<Date[]>([]);
 
   useEffect(() => {
     fetchPayments();
   }, []);
+
+  // Update preview dates when recurrence settings change
+  useEffect(() => {
+    if (isRecurring && dueDate && endDate) {
+      const startDateObj = parseISO(dueDate);
+      const endDateObj = parseISO(endDate);
+      if (isBefore(startDateObj, endDateObj) || isEqual(startDateObj, endDateObj)) {
+        const dates = generateDates(startDateObj, endDateObj, frequency);
+        setPreviewDates(dates);
+      } else {
+        setPreviewDates([]);
+      }
+    } else {
+      setPreviewDates([]);
+    }
+  }, [isRecurring, dueDate, endDate, frequency]);
+
+  const generateDates = (startDate: Date, endDateParam: Date, freq: string): Date[] => {
+    const dates: Date[] = [];
+    let currentDate = startDate;
+
+    while (isBefore(currentDate, endDateParam) || isEqual(currentDate, endDateParam)) {
+      dates.push(new Date(currentDate));
+      
+      switch (freq) {
+        case '1x semana':
+          currentDate = addWeeks(currentDate, 1);
+          break;
+        case '2x semana':
+          currentDate = addDays(currentDate, 3);
+          break;
+        case '1x quinzena':
+          currentDate = addWeeks(currentDate, 2);
+          break;
+        case '1x 3 semanas':
+          currentDate = addWeeks(currentDate, 3);
+          break;
+        case '1x mês':
+          currentDate = addMonths(currentDate, 1);
+          break;
+        default:
+          currentDate = addWeeks(currentDate, 1);
+      }
+    }
+
+    return dates;
+  };
 
   const fetchPayments = async () => {
     try {
@@ -81,11 +134,43 @@ export default function AdminFinancial() {
         profilesMap.set(p.user_id, p.full_name);
       });
 
-      // Combine data
-      const combinedData = (paymentsData || []).map((payment) => ({
-        ...payment,
-        patient_name: profilesMap.get(payment.user_id) || 'Paciente',
-      }));
+      // Check for overdue payments and update them
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const paymentsToUpdate = (paymentsData || []).filter(payment => {
+        if (payment.status === 'pending') {
+          const paymentDueDate = parseISO(payment.due_date);
+          return isAfter(today, paymentDueDate);
+        }
+        return false;
+      });
+
+      // Update overdue payments in the database
+      if (paymentsToUpdate.length > 0) {
+        for (const payment of paymentsToUpdate) {
+          await supabase
+            .from('payments')
+            .update({ status: 'overdue' })
+            .eq('id', payment.id);
+        }
+      }
+
+      // Combine data with updated status
+      const combinedData = (paymentsData || []).map((payment) => {
+        let finalStatus = payment.status;
+        if (payment.status === 'pending') {
+          const paymentDueDate = parseISO(payment.due_date);
+          if (isAfter(today, paymentDueDate)) {
+            finalStatus = 'overdue';
+          }
+        }
+        return {
+          ...payment,
+          status: finalStatus,
+          patient_name: profilesMap.get(payment.user_id) || 'Paciente',
+        };
+      });
 
       setPayments(combinedData);
     } catch (error) {
@@ -98,20 +183,43 @@ export default function AdminFinancial() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient || !amount || !dueDate) return;
+    if (isRecurring && !endDate) {
+      toast({ title: 'Selecione a data final para recorrência', variant: 'destructive' });
+      return;
+    }
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('payments').insert({
-        user_id: selectedPatient,
-        amount: parseFloat(amount),
-        due_date: dueDate,
-        status,
-        description: description || null,
-      });
+      if (isRecurring) {
+        const startDateObj = parseISO(dueDate);
+        const endDateObj = parseISO(endDate);
+        const dates = generateDates(startDateObj, endDateObj, frequency);
 
-      if (error) throw error;
+        const paymentsToInsert = dates.map(date => ({
+          user_id: selectedPatient,
+          amount: parseFloat(amount),
+          due_date: format(date, 'yyyy-MM-dd'),
+          status,
+          description: description || null,
+        }));
 
-      toast({ title: 'Pagamento adicionado com sucesso!' });
+        const { error } = await supabase.from('payments').insert(paymentsToInsert);
+        if (error) throw error;
+
+        toast({ title: `${paymentsToInsert.length} pagamentos adicionados com sucesso!` });
+      } else {
+        const { error } = await supabase.from('payments').insert({
+          user_id: selectedPatient,
+          amount: parseFloat(amount),
+          due_date: dueDate,
+          status,
+          description: description || null,
+        });
+
+        if (error) throw error;
+        toast({ title: 'Pagamento adicionado com sucesso!' });
+      }
+
       setDialogOpen(false);
       resetForm();
       fetchPayments();
@@ -164,6 +272,10 @@ export default function AdminFinancial() {
     setDueDate('');
     setStatus('pending');
     setDescription('');
+    setIsRecurring(false);
+    setFrequency('1x semana');
+    setEndDate('');
+    setPreviewDates([]);
   };
 
   const formatCurrency = (value: number) => {
@@ -225,6 +337,55 @@ export default function AdminFinancial() {
                     required
                   />
                 </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="recurring">Pagamento Recorrente</Label>
+                  <Switch
+                    id="recurring"
+                    checked={isRecurring}
+                    onCheckedChange={setIsRecurring}
+                  />
+                </div>
+                {isRecurring && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Frequência</Label>
+                      <Select value={frequency} onValueChange={setFrequency}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2x semana">2x por semana</SelectItem>
+                          <SelectItem value="1x semana">1x por semana</SelectItem>
+                          <SelectItem value="1x quinzena">1x por quinzena</SelectItem>
+                          <SelectItem value="1x 3 semanas">1x a cada 3 semanas</SelectItem>
+                          <SelectItem value="1x mês">1x por mês</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data Final</Label>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={dueDate}
+                        required={isRecurring}
+                      />
+                    </div>
+                    {previewDates.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Datas que serão criadas ({previewDates.length})</Label>
+                        <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/50 p-2 flex flex-wrap gap-2">
+                          {previewDates.map((date, index) => (
+                            <span key={index} className="status-pending">
+                              {format(date, "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select value={status} onValueChange={setStatus}>
@@ -234,7 +395,7 @@ export default function AdminFinancial() {
                     <SelectContent>
                       <SelectItem value="pending">Pendente</SelectItem>
                       <SelectItem value="paid">Pago</SelectItem>
-                      <SelectItem value="overdue">Vencido</SelectItem>
+                      <SelectItem value="overdue">Atrasado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -247,7 +408,7 @@ export default function AdminFinancial() {
                   />
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : 'Adicionar Pagamento'}
+                  {saving ? 'Salvando...' : isRecurring ? 'Adicionar Pagamentos' : 'Adicionar Pagamento'}
                 </Button>
               </form>
             </DialogContent>
@@ -280,13 +441,13 @@ export default function AdminFinancial() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <Select value={payment.status} onValueChange={(value) => handleStatusChange(payment.id, value)}>
-                        <SelectTrigger className="w-28 h-8">
+                        <SelectTrigger className="w-32 h-8">
                           <StatusBadge status={payment.status} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">Pendente</SelectItem>
                           <SelectItem value="paid">Pago</SelectItem>
-                          <SelectItem value="overdue">Vencido</SelectItem>
+                          <SelectItem value="overdue">Atrasado</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
