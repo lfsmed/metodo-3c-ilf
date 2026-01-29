@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CreatePatientDialog } from '@/components/admin/CreatePatientDialog';
+import { EditPatientDialog } from '@/components/admin/EditPatientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, Mail, Phone, Calendar, MapPin } from 'lucide-react';
+import { Search, User, Mail, Phone, Calendar, MapPin, Pencil } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
 interface Patient {
   id: string;
   user_id: string;
@@ -27,6 +29,8 @@ export default function AdminPatients() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
 
   useEffect(() => {
     fetchPatients();
@@ -101,9 +105,22 @@ export default function AdminPatients() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="font-display text-lg">{selectedPatient.full_name}</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)}>
-                  Voltar
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setPatientToEdit(selectedPatient);
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4 mr-1" />
+                    Editar
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)}>
+                    Voltar
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -173,6 +190,26 @@ export default function AdminPatients() {
             )}
           </div>
         )}
+
+        <EditPatientDialog
+          patient={patientToEdit}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onPatientUpdated={() => {
+            fetchPatients();
+            if (patientToEdit && selectedPatient?.id === patientToEdit.id) {
+              // Refresh selected patient data
+              supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', patientToEdit.id)
+                .single()
+                .then(({ data }) => {
+                  if (data) setSelectedPatient(data);
+                });
+            }
+          }}
+        />
       </div>
     </AdminLayout>
   );
