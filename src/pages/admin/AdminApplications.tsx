@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Calendar, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -51,6 +52,9 @@ export default function AdminApplications() {
   const [status, setStatus] = useState('scheduled');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState('1x semana');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchApplications();
@@ -93,22 +97,72 @@ export default function AdminApplications() {
     }
   };
 
+  const generateDates = (startDate: Date, endDate: Date, freq: string): Date[] => {
+    const dates: Date[] = [];
+    let currentDate = startDate;
+
+    while (isBefore(currentDate, endDate) || isEqual(currentDate, endDate)) {
+      dates.push(new Date(currentDate));
+      
+      switch (freq) {
+        case '1x semana':
+          currentDate = addWeeks(currentDate, 1);
+          break;
+        case '2x semana':
+          currentDate = addDays(currentDate, 3);
+          break;
+        case '1x quinzena':
+          currentDate = addWeeks(currentDate, 2);
+          break;
+        case '1x mês':
+          currentDate = addMonths(currentDate, 1);
+          break;
+        default:
+          currentDate = addWeeks(currentDate, 1);
+      }
+    }
+
+    return dates;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient || !applicationDate) return;
+    if (isRecurring && !endDate) {
+      toast({ title: 'Selecione a data final para recorrência', variant: 'destructive' });
+      return;
+    }
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('applications').insert({
-        user_id: selectedPatient,
-        application_date: applicationDate,
-        status,
-        notes: notes || null,
-      });
+      if (isRecurring) {
+        const startDateObj = parseISO(applicationDate);
+        const endDateObj = parseISO(endDate);
+        const dates = generateDates(startDateObj, endDateObj, frequency);
 
-      if (error) throw error;
+        const applicationsToInsert = dates.map(date => ({
+          user_id: selectedPatient,
+          application_date: format(date, 'yyyy-MM-dd'),
+          status,
+          notes: notes || null,
+        }));
 
-      toast({ title: 'Aplicação adicionada com sucesso!' });
+        const { error } = await supabase.from('applications').insert(applicationsToInsert);
+        if (error) throw error;
+
+        toast({ title: `${applicationsToInsert.length} aplicações adicionadas com sucesso!` });
+      } else {
+        const { error } = await supabase.from('applications').insert({
+          user_id: selectedPatient,
+          application_date: applicationDate,
+          status,
+          notes: notes || null,
+        });
+
+        if (error) throw error;
+        toast({ title: 'Aplicação adicionada com sucesso!' });
+      }
+
       setDialogOpen(false);
       resetForm();
       fetchApplications();
@@ -140,6 +194,9 @@ export default function AdminApplications() {
     setApplicationDate('');
     setStatus('scheduled');
     setNotes('');
+    setIsRecurring(false);
+    setFrequency('1x semana');
+    setEndDate('');
   };
 
   if (loading) {
@@ -186,6 +243,42 @@ export default function AdminApplications() {
                     required
                   />
                 </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="recurring">Aplicação Recorrente</Label>
+                  <Switch
+                    id="recurring"
+                    checked={isRecurring}
+                    onCheckedChange={setIsRecurring}
+                  />
+                </div>
+                {isRecurring && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Frequência</Label>
+                      <Select value={frequency} onValueChange={setFrequency}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2x semana">2x por semana</SelectItem>
+                          <SelectItem value="1x semana">1x por semana</SelectItem>
+                          <SelectItem value="1x quinzena">1x por quinzena</SelectItem>
+                          <SelectItem value="1x mês">1x por mês</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data Final</Label>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={applicationDate}
+                        required={isRecurring}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select value={status} onValueChange={setStatus}>
@@ -208,7 +301,7 @@ export default function AdminApplications() {
                   />
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : 'Adicionar Aplicação'}
+                  {saving ? 'Salvando...' : isRecurring ? 'Adicionar Aplicações' : 'Adicionar Aplicação'}
                 </Button>
               </form>
             </DialogContent>
