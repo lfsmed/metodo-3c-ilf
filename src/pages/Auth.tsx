@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import logoInstituto from '@/assets/instituto-luiz-fernando-logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -106,9 +107,11 @@ export default function Auth() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 shadow-glow animate-pulse-glow">
-            <span className="text-3xl font-bold text-primary-foreground font-display">3C</span>
-          </div>
+          <img 
+            src={logoInstituto} 
+            alt="Instituto Luiz Fernando" 
+            className="h-16 mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold font-display">Método 3C</h1>
           <p className="text-muted-foreground text-sm mt-1">Instituto Luiz Fernando</p>
         </div>
