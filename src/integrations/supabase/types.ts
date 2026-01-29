@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      medical_evaluations: {
+        Row: {
+          created_at: string
+          evaluation_date: string
+          evaluation_time: string
+          id: string
+          notes: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evaluation_date: string
+          evaluation_time: string
+          id?: string
+          notes?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evaluation_date?: string
+          evaluation_time?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       medications: {
         Row: {
           created_at: string
