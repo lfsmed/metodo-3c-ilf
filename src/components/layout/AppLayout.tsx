@@ -8,9 +8,9 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
-      <main className="container px-4 py-6 pb-24">
+      <main className="flex-1 overflow-y-auto container px-4 py-6 pb-24">
         {children}
       </main>
       <MobileNav />
