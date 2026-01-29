@@ -10,7 +10,8 @@ import {
   MessageCircle, 
   LayoutDashboard,
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  Stethoscope
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const navItems = [
   { icon: Calendar, label: 'Aplicações', path: '/admin/applications' },
   { icon: CreditCard, label: 'Financeiro', path: '/admin/financial' },
   { icon: Pill, label: 'Medicações', path: '/admin/medications' },
+  { icon: Stethoscope, label: 'Avaliações', path: '/admin/evaluations' },
   { icon: MessageCircle, label: 'Dúvidas', path: '/admin/questions' },
 ];
 
