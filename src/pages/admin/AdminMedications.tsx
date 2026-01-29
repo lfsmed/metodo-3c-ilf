@@ -16,8 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Pill, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 interface Medication {
@@ -51,10 +59,61 @@ export default function AdminMedications() {
   const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState('1x semana');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
+  const [previewDates, setPreviewDates] = useState<Date[]>([]);
 
   useEffect(() => {
     fetchMedications();
   }, []);
+
+  // Update preview dates when recurrence settings change
+  useEffect(() => {
+    if (isRecurring && startDate && recurrenceEndDate) {
+      const startDateObj = parseISO(startDate);
+      const endDateObj = parseISO(recurrenceEndDate);
+      if (isBefore(startDateObj, endDateObj) || isEqual(startDateObj, endDateObj)) {
+        const dates = generateDates(startDateObj, endDateObj, recurrenceFrequency);
+        setPreviewDates(dates);
+      } else {
+        setPreviewDates([]);
+      }
+    } else {
+      setPreviewDates([]);
+    }
+  }, [isRecurring, startDate, recurrenceEndDate, recurrenceFrequency]);
+
+  const generateDates = (start: Date, end: Date, freq: string): Date[] => {
+    const dates: Date[] = [];
+    let currentDate = start;
+
+    while (isBefore(currentDate, end) || isEqual(currentDate, end)) {
+      dates.push(new Date(currentDate));
+      
+      switch (freq) {
+        case '1x semana':
+          currentDate = addWeeks(currentDate, 1);
+          break;
+        case '2x semana':
+          currentDate = addDays(currentDate, 3);
+          break;
+        case '1x quinzena':
+          currentDate = addWeeks(currentDate, 2);
+          break;
+        case '1x 3 semanas':
+          currentDate = addWeeks(currentDate, 3);
+          break;
+        case '1x mês':
+          currentDate = addMonths(currentDate, 1);
+          break;
+        default:
+          currentDate = addWeeks(currentDate, 1);
+      }
+    }
+
+    return dates;
+  };
 
   const fetchMedications = async () => {
     try {
@@ -97,23 +156,49 @@ export default function AdminMedications() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient || !medicationName || !dosage || !frequency || !startDate) return;
+    if (isRecurring && !recurrenceEndDate) {
+      toast({ title: 'Selecione a data final para recorrência', variant: 'destructive' });
+      return;
+    }
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('medications').insert({
-        user_id: selectedPatient,
-        medication_name: medicationName,
-        dosage,
-        frequency,
-        start_date: startDate,
-        end_date: endDate || null,
-        notes: notes || null,
-        is_active: true,
-      });
+      if (isRecurring) {
+        const startDateObj = parseISO(startDate);
+        const endDateObj = parseISO(recurrenceEndDate);
+        const dates = generateDates(startDateObj, endDateObj, recurrenceFrequency);
 
-      if (error) throw error;
+        const medicationsToInsert = dates.map(date => ({
+          user_id: selectedPatient,
+          medication_name: medicationName,
+          dosage,
+          frequency,
+          start_date: format(date, 'yyyy-MM-dd'),
+          end_date: endDate || null,
+          notes: notes || null,
+          is_active: true,
+        }));
 
-      toast({ title: 'Medicação adicionada com sucesso!' });
+        const { error } = await supabase.from('medications').insert(medicationsToInsert);
+        if (error) throw error;
+
+        toast({ title: `${medicationsToInsert.length} medicações adicionadas com sucesso!` });
+      } else {
+        const { error } = await supabase.from('medications').insert({
+          user_id: selectedPatient,
+          medication_name: medicationName,
+          dosage,
+          frequency,
+          start_date: startDate,
+          end_date: endDate || null,
+          notes: notes || null,
+          is_active: true,
+        });
+
+        if (error) throw error;
+        toast({ title: 'Medicação adicionada com sucesso!' });
+      }
+
       setDialogOpen(false);
       resetForm();
       fetchMedications();
@@ -165,6 +250,10 @@ export default function AdminMedications() {
     setStartDate('');
     setEndDate('');
     setNotes('');
+    setIsRecurring(false);
+    setRecurrenceFrequency('1x semana');
+    setRecurrenceEndDate('');
+    setPreviewDates([]);
   };
 
   if (loading) {
@@ -250,6 +339,55 @@ export default function AdminMedications() {
                     />
                   </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="recurring">Medicação Recorrente</Label>
+                  <Switch
+                    id="recurring"
+                    checked={isRecurring}
+                    onCheckedChange={setIsRecurring}
+                  />
+                </div>
+                {isRecurring && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Frequência de Criação</Label>
+                      <Select value={recurrenceFrequency} onValueChange={setRecurrenceFrequency}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2x semana">2x por semana</SelectItem>
+                          <SelectItem value="1x semana">1x por semana</SelectItem>
+                          <SelectItem value="1x quinzena">1x por quinzena</SelectItem>
+                          <SelectItem value="1x 3 semanas">1x a cada 3 semanas</SelectItem>
+                          <SelectItem value="1x mês">1x por mês</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data Final da Recorrência</Label>
+                      <Input
+                        type="date"
+                        value={recurrenceEndDate}
+                        onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                        min={startDate}
+                        required={isRecurring}
+                      />
+                    </div>
+                    {previewDates.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Datas que serão criadas ({previewDates.length})</Label>
+                        <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/50 p-2 flex flex-wrap gap-2">
+                          {previewDates.map((date, index) => (
+                            <span key={index} className="status-scheduled">
+                              {format(date, "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="space-y-2">
                   <Label>Observações (opcional)</Label>
                   <Textarea
@@ -259,7 +397,7 @@ export default function AdminMedications() {
                   />
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : 'Adicionar Medicação'}
+                  {saving ? 'Salvando...' : isRecurring ? 'Adicionar Medicações' : 'Adicionar Medicação'}
                 </Button>
               </form>
             </DialogContent>
