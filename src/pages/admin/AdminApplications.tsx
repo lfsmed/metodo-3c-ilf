@@ -319,11 +319,11 @@ export default function AdminApplications() {
                     {previewDates.length > 0 && (
                       <div className="space-y-2">
                         <Label>Datas que serão criadas ({previewDates.length})</Label>
-                        <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/50 p-2 text-sm space-y-1">
+                        <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/50 p-2 flex flex-wrap gap-2">
                           {previewDates.map((date, index) => (
-                            <p key={index} className="text-muted-foreground">
-                              {format(date, "dd/MM/yyyy (EEEE)", { locale: ptBR })}
-                            </p>
+                            <span key={index} className="status-scheduled">
+                              {format(date, "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
                           ))}
                         </div>
                       </div>
