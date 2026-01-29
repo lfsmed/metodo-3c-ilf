@@ -114,6 +114,9 @@ export default function AdminApplications() {
         case '1x quinzena':
           currentDate = addWeeks(currentDate, 2);
           break;
+        case '1x 3 semanas':
+          currentDate = addWeeks(currentDate, 3);
+          break;
         case '1x mês':
           currentDate = addMonths(currentDate, 1);
           break;
@@ -263,6 +266,7 @@ export default function AdminApplications() {
                           <SelectItem value="2x semana">2x por semana</SelectItem>
                           <SelectItem value="1x semana">1x por semana</SelectItem>
                           <SelectItem value="1x quinzena">1x por quinzena</SelectItem>
+                          <SelectItem value="1x 3 semanas">1x a cada 3 semanas</SelectItem>
                           <SelectItem value="1x mês">1x por mês</SelectItem>
                         </SelectContent>
                       </Select>
