@@ -72,8 +72,8 @@ export default function Applications() {
     <div className="card-elevated p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-primary" />
+          <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-primary" />
           </div>
           <div>
             <p className="font-medium font-display">
@@ -103,7 +103,7 @@ export default function Applications() {
             onClick={() => navigate('/dashboard')}
             className="p-2 rounded-lg hover:bg-secondary transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
             <h1 className="text-xl font-bold font-display">Aplicações</h1>
@@ -125,7 +125,7 @@ export default function Applications() {
           <TabsContent value="future" className="space-y-3 mt-4">
             {futureApplications.length === 0 ? (
               <div className="text-center py-12">
-                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <Calendar className="w-14 h-14 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground">Nenhuma aplicação agendada</p>
               </div>
             ) : (
@@ -138,7 +138,7 @@ export default function Applications() {
           <TabsContent value="past" className="space-y-3 mt-4">
             {pastApplications.length === 0 ? (
               <div className="text-center py-12">
-                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <Calendar className="w-14 h-14 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground">Nenhuma aplicação realizada</p>
               </div>
             ) : (

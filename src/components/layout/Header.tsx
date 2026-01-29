@@ -36,28 +36,28 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
-              <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
-                <User className="w-5 h-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                <User className="w-6 h-6 text-muted-foreground" />
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-card border-border">
             <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-              <Settings className="w-4 h-4 mr-2" />
+              <Settings className="w-5 h-5 mr-2" />
               Meu Perfil
             </DropdownMenuItem>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer text-primary">
-                  <Shield className="w-4 h-4 mr-2" />
+                  <Shield className="w-5 h-5 mr-2" />
                   Painel Admin
                 </DropdownMenuItem>
               </>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-5 h-5 mr-2" />
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>

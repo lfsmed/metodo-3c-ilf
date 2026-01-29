@@ -124,8 +124,8 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-sm text-primary font-medium">{getGreeting()}</span>
+            <Sparkles className="w-6 h-6 text-primary" />
+            <span className="text-base text-primary font-medium">{getGreeting()}</span>
           </div>
           <h1 className="text-2xl font-bold font-display">{data.userName}</h1>
           <p className="text-muted-foreground text-sm">
@@ -140,8 +140,8 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                <Calendar className="w-6 h-6 text-primary-foreground" />
+              <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+                <Calendar className="w-7 h-7 text-primary-foreground" />
               </div>
               <div>
                 <p className="text-base text-muted-foreground">Próxima aplicação</p>
@@ -159,7 +159,7 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
 
@@ -199,8 +199,8 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary">
-                <MessageCircle className="w-5 h-5 text-primary" />
+              <div className="p-2.5 rounded-lg bg-secondary">
+                <MessageCircle className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <p className="text-lg font-medium">Dúvidas e Relatos</p>
@@ -211,7 +211,7 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </div>

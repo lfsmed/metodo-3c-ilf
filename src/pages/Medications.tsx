@@ -74,11 +74,11 @@ export default function Medications() {
     )}>
       <div className="flex items-start gap-3">
         <div className={cn(
-          "w-10 h-10 rounded-lg flex items-center justify-center",
+          "w-12 h-12 rounded-lg flex items-center justify-center",
           medication.is_active ? "gradient-primary" : "bg-secondary"
         )}>
           <Pill className={cn(
-            "w-5 h-5",
+            "w-6 h-6",
             medication.is_active ? "text-primary-foreground" : "text-muted-foreground"
           )} />
         </div>
@@ -95,8 +95,8 @@ export default function Medications() {
             )}
           </div>
           
-          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4" />
+          <div className="flex items-center gap-2 mt-2 text-base text-muted-foreground">
+            <Clock className="w-5 h-5" />
             <span>{medication.frequency}</span>
           </div>
 
@@ -111,7 +111,7 @@ export default function Medications() {
 
           {medication.notes && (
             <div className="flex items-start gap-2 mt-2 p-2 rounded-lg bg-secondary/50">
-              <AlertCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">{medication.notes}</p>
             </div>
           )}
@@ -129,7 +129,7 @@ export default function Medications() {
             onClick={() => navigate('/dashboard')}
             className="p-2 rounded-lg hover:bg-secondary transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
             <h1 className="text-xl font-bold font-display">Medicações</h1>
@@ -145,7 +145,7 @@ export default function Medications() {
           
           {activeMedications.length === 0 ? (
             <div className="text-center py-12 card-elevated">
-              <Pill className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <Pill className="w-14 h-14 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">Nenhuma medicação ativa</p>
             </div>
           ) : (
