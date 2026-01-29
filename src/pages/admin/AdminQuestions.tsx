@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,11 +31,28 @@ interface Profile {
 
 export default function AdminQuestions() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [response, setResponse] = useState('');
   const [saving, setSaving] = useState(false);
+  const [adminName, setAdminName] = useState('');
+
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.full_name) {
+        setAdminName(data.full_name);
+      }
+    };
+    fetchAdminProfile();
+  }, [user]);
 
   useEffect(() => {
     fetchQuestions();
@@ -82,10 +100,15 @@ export default function AdminQuestions() {
 
     setSaving(true);
     try {
+      // Add signature with admin name
+      const signedResponse = adminName 
+        ? `${response.trim()}\n\n— ${adminName}`
+        : response.trim();
+
       const { error } = await supabase
         .from('questions_reports')
         .update({
-          response,
+          response: signedResponse,
           responded_at: new Date().toISOString(),
         })
         .eq('id', selectedQuestion.id);
