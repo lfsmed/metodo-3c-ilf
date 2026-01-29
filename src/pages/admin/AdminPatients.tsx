@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, User, Mail, Phone, Calendar, MapPin, Pencil } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,6 +21,7 @@ interface Patient {
   cpf: string | null;
   birth_date: string | null;
   address: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -104,7 +106,15 @@ export default function AdminPatients() {
           <Card className="card-elevated">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="font-display text-lg">{selectedPatient.full_name}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={selectedPatient.avatar_url || undefined} alt={selectedPatient.full_name} />
+                    <AvatarFallback className="gradient-primary text-primary-foreground font-bold">
+                      {selectedPatient.full_name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <CardTitle className="font-display text-lg">{selectedPatient.full_name}</CardTitle>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button 
                     variant="outline" 
@@ -176,9 +186,12 @@ export default function AdminPatients() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold">
-                        {patient.full_name.charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={patient.avatar_url || undefined} alt={patient.full_name} />
+                        <AvatarFallback className="gradient-primary text-primary-foreground font-bold">
+                          {patient.full_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{patient.full_name}</p>
                         <p className="text-sm text-muted-foreground truncate">{patient.email}</p>

@@ -13,6 +13,7 @@ interface UpdateUserRequest {
   cpf?: string;
   birth_date?: string;
   address?: string;
+  avatar_url?: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: UpdateUserRequest = await req.json();
-    const { user_id, email, full_name, phone, cpf, birth_date, address } = body;
+    const { user_id, email, full_name, phone, cpf, birth_date, address, avatar_url } = body;
 
     // Validate required fields
     if (!user_id) {
@@ -110,6 +111,7 @@ Deno.serve(async (req) => {
     if (cpf !== undefined) profileUpdate.cpf = cpf || null;
     if (birth_date !== undefined) profileUpdate.birth_date = birth_date || null;
     if (address !== undefined) profileUpdate.address = address || null;
+    if (avatar_url !== undefined) profileUpdate.avatar_url = avatar_url;
 
     // Update profile
     if (Object.keys(profileUpdate).length > 0) {
