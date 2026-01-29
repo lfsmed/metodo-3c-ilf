@@ -18,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 
 const editPatientSchema = z.object({
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100),
+  email: z.string().email('Email inválido').max(255),
   phone: z.string().max(20).optional(),
   cpf: z.string().max(14).optional(),
   birth_date: z.string().optional(),
@@ -60,6 +61,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
     if (patient && open) {
       reset({
         full_name: patient.full_name,
+        email: patient.email,
         phone: patient.phone || '',
         cpf: patient.cpf || '',
         birth_date: patient.birth_date || '',
@@ -73,18 +75,33 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: data.full_name,
-          phone: data.phone || null,
-          cpf: data.cpf || null,
-          birth_date: data.birth_date || null,
-          address: data.address || null,
-        })
-        .eq('id', patient.id);
+      const { data: session } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            user_id: patient.user_id,
+            email: data.email,
+            full_name: data.full_name,
+            phone: data.phone || undefined,
+            cpf: data.cpf || undefined,
+            birth_date: data.birth_date || undefined,
+            address: data.address || undefined,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao atualizar paciente');
+      }
 
       toast({
         title: 'Sucesso',
@@ -97,7 +114,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
       console.error('Error updating patient:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao atualizar cadastro',
+        description: error instanceof Error ? error.message : 'Erro ao atualizar cadastro',
         variant: 'destructive',
       });
     } finally {
@@ -128,13 +145,16 @@ export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdate
           </div>
 
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label htmlFor="edit_email">Email *</Label>
             <Input
-              value={patient?.email || ''}
-              disabled
-              className="bg-muted"
+              id="edit_email"
+              type="email"
+              {...register('email')}
+              placeholder="email@exemplo.com"
             />
-            <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
