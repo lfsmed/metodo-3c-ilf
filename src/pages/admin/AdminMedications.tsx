@@ -256,48 +256,6 @@ export default function AdminMedications() {
     setPreviewDates([]);
   };
 
-  const handleToggleActive = async (id: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('medications')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({ title: currentStatus ? 'Medicação desativada' : 'Medicação ativada' });
-      fetchMedications();
-    } catch (error) {
-      console.error('Error updating medication:', error);
-      toast({ title: 'Erro ao atualizar medicação', variant: 'destructive' });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta medicação?')) return;
-
-    try {
-      const { error } = await supabase.from('medications').delete().eq('id', id);
-      if (error) throw error;
-
-      toast({ title: 'Medicação excluída!' });
-      fetchMedications();
-    } catch (error) {
-      console.error('Error deleting medication:', error);
-      toast({ title: 'Erro ao excluir medicação', variant: 'destructive' });
-    }
-  };
-
-  const resetForm = () => {
-    setSelectedPatient('');
-    setMedicationName('');
-    setDosage('');
-    setFrequency('');
-    setStartDate('');
-    setEndDate('');
-    setNotes('');
-  };
-
   if (loading) {
     return (
       <AdminLayout currentPage="/admin/medications">
