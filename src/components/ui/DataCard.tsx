@@ -25,10 +25,10 @@ export function DataCard({
     <div className={cn("card-elevated p-4", className)}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-semibold font-display mt-1">{value}</p>
+          <p className="text-base text-muted-foreground">{title}</p>
+          <p className="text-3xl font-semibold font-display mt-1">{value}</p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
         {Icon && (
