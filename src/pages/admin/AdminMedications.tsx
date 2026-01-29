@@ -30,7 +30,12 @@ interface Medication {
   end_date: string | null;
   is_active: boolean;
   notes: string | null;
-  profiles?: { full_name: string };
+  patient_name?: string;
+}
+
+interface Profile {
+  user_id: string;
+  full_name: string;
 }
 
 export default function AdminMedications() {
@@ -53,14 +58,35 @@ export default function AdminMedications() {
 
   const fetchMedications = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch medications
+      const { data: medsData, error: medsError } = await supabase
         .from('medications')
-        .select('*, profiles!medications_user_id_fkey(full_name)')
+        .select('*')
         .order('is_active', { ascending: false })
         .order('start_date', { ascending: false });
 
-      if (error) throw error;
-      setMedications(data || []);
+      if (medsError) throw medsError;
+
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name');
+
+      if (profilesError) throw profilesError;
+
+      // Create a map
+      const profilesMap = new Map<string, string>();
+      (profilesData || []).forEach((p: Profile) => {
+        profilesMap.set(p.user_id, p.full_name);
+      });
+
+      // Combine data
+      const combinedData = (medsData || []).map((med) => ({
+        ...med,
+        patient_name: profilesMap.get(med.user_id) || 'Paciente',
+      }));
+
+      setMedications(combinedData);
     } catch (error) {
       console.error('Error fetching medications:', error);
     } finally {
@@ -257,7 +283,7 @@ export default function AdminMedications() {
                         <Pill className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{med.profiles?.full_name || 'Paciente'}</p>
+                        <p className="font-medium">{med.patient_name}</p>
                         <p className="text-lg font-semibold text-primary">{med.medication_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {med.dosage} • {med.frequency}
