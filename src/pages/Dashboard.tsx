@@ -144,16 +144,16 @@ export default function Dashboard() {
                 <Calendar className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Próxima aplicação</p>
+                <p className="text-base text-muted-foreground">Próxima aplicação</p>
                 {data.nextApplication ? (
                   <>
-                    <p className="text-lg font-semibold font-display">
+                    <p className="text-xl font-semibold font-display">
                       {format(parseISO(data.nextApplication.date), "dd 'de' MMMM", { locale: ptBR })}
                     </p>
                     <StatusBadge status="scheduled" className="mt-1" />
                   </>
                 ) : (
-                  <p className="text-lg font-semibold font-display text-muted-foreground">
+                  <p className="text-xl font-semibold font-display text-muted-foreground">
                     Nenhuma agendada
                   </p>
                 )}
@@ -203,8 +203,8 @@ export default function Dashboard() {
                 <MessageCircle className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Dúvidas e Relatos</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-lg font-medium">Dúvidas e Relatos</p>
+                <p className="text-base text-muted-foreground">
                   {data.pendingQuestions > 0 
                     ? `${data.pendingQuestions} aguardando resposta`
                     : 'Tire suas dúvidas'}
