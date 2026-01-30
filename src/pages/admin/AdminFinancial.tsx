@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { PatientSelector } from '@/components/admin/PatientSelector';
 import { EditPaymentDialog } from '@/components/admin/EditPaymentDialog';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +49,8 @@ interface Profile {
 
 export default function AdminFinancial() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { hasFinancialAccess, loading: adminLoading } = useAdmin();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -63,9 +67,18 @@ export default function AdminFinancial() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
+  // Redirect if no financial access
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    if (!adminLoading && !hasFinancialAccess) {
+      navigate('/admin');
+    }
+  }, [hasFinancialAccess, adminLoading, navigate]);
+
+  useEffect(() => {
+    if (hasFinancialAccess) {
+      fetchPayments();
+    }
+  }, [hasFinancialAccess]);
 
   // Update preview dates when recurrence settings change
   useEffect(() => {

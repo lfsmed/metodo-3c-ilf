@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DataCard } from '@/components/ui/DataCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -48,6 +49,7 @@ interface MedicalEvaluation {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { hasFinancialAccess } = useAdmin();
   const [stats, setStats] = useState<AdminStats>({
     totalPatients: 0,
     scheduledApplications: 0,
@@ -66,9 +68,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-    fetchFinancialStats();
+    if (hasFinancialAccess) {
+      fetchFinancialStats();
+    }
     fetchUpcomingEvaluations();
-  }, []);
+  }, [hasFinancialAccess]);
 
   const fetchStats = async () => {
     try {
@@ -225,43 +229,45 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">Valores Recebidos</span>
+            {hasFinancialAccess && (
+              <div className="grid grid-cols-1 gap-3">
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-muted-foreground">Valores Recebidos</span>
+                    </div>
+                    <p className="text-lg font-bold font-display text-green-500">
+                      {formatCurrency(financialStats.totalReceived)}
+                    </p>
                   </div>
-                  <p className="text-lg font-bold font-display text-green-500">
-                    {formatCurrency(financialStats.totalReceived)}
-                  </p>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-yellow-500" />
+                      <span className="text-sm text-muted-foreground">Valores a Receber</span>
+                    </div>
+                    <p className="text-lg font-bold font-display text-yellow-500">
+                      {formatCurrency(financialStats.totalPending)}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm text-muted-foreground">Valores Atrasados</span>
+                    </div>
+                    <p className="text-lg font-bold font-display text-red-500">
+                      {formatCurrency(financialStats.totalOverdue)}
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm text-muted-foreground">Valores a Receber</span>
-                  </div>
-                  <p className="text-lg font-bold font-display text-yellow-500">
-                    {formatCurrency(financialStats.totalPending)}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <span className="text-sm text-muted-foreground">Valores Atrasados</span>
-                  </div>
-                  <p className="text-lg font-bold font-display text-red-500">
-                    {formatCurrency(financialStats.totalOverdue)}
-                  </p>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
