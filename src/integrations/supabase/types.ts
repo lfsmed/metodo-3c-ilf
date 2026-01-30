@@ -44,6 +44,7 @@ export type Database = {
       financial_unlock_requests: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           notes: string | null
           requested_at: string
@@ -54,6 +55,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           notes?: string | null
           requested_at?: string
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           notes?: string | null
           requested_at?: string

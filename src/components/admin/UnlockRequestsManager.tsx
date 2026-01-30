@@ -73,18 +73,23 @@ export function UnlockRequestsManager() {
     if (!user) return;
 
     try {
+      // Set expiration to 12 hours from now
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 12);
+
       const { error } = await supabase
         .from('financial_unlock_requests')
         .update({
           status: 'approved',
           responded_at: new Date().toISOString(),
           responded_by: user.id,
+          expires_at: expiresAt.toISOString(),
         })
         .eq('id', requestId);
 
       if (error) throw error;
 
-      toast({ title: 'Solicitação aprovada!' });
+      toast({ title: 'Solicitação aprovada!', description: 'O acesso expira em 12 horas.' });
       fetchRequests();
     } catch (error) {
       console.error('Error approving request:', error);
