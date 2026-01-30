@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_unlock_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          requested_at: string
+          requester_id: string
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          requester_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          requester_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       medical_evaluations: {
         Row: {
           created_at: string
