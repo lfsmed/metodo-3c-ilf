@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { PatientSelector } from '@/components/admin/PatientSelector';
+import { EditApplicationDialog } from '@/components/admin/EditApplicationDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Trash2, Pencil } from 'lucide-react';
 import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +57,8 @@ export default function AdminApplications() {
   const [frequency, setFrequency] = useState('1x semana');
   const [endDate, setEndDate] = useState('');
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingApplication, setEditingApplication] = useState<Application | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -237,6 +240,11 @@ export default function AdminApplications() {
     setPreviewDates([]);
   };
 
+  const handleEdit = (app: Application) => {
+    setEditingApplication(app);
+    setEditDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <AdminLayout currentPage="/admin/applications">
@@ -401,6 +409,13 @@ export default function AdminApplications() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleEdit(app)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDelete(app.id)}
                       >
@@ -416,6 +431,14 @@ export default function AdminApplications() {
             ))
           )}
         </div>
+
+        <EditApplicationDialog
+          application={editingApplication}
+          allApplications={applications}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={fetchApplications}
+        />
       </div>
     </AdminLayout>
   );
