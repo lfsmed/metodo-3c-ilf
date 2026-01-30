@@ -144,7 +144,7 @@ export default function AdminFinancial() {
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
-        .order('due_date', { ascending: false });
+        .order('due_date', { ascending: true });
 
       if (paymentsError) throw paymentsError;
 

@@ -42,7 +42,7 @@ export default function Applications() {
         .from('applications')
         .select('*')
         .eq('user_id', user.id)
-        .order('application_date', { ascending: false });
+        .order('application_date', { ascending: true });
 
       setApplications((data as Application[]) || []);
     } catch (error) {
