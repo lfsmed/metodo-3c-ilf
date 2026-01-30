@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import logoInstituto from '@/assets/instituto-luiz-fernando-logo.png';
+import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -221,6 +222,11 @@ export default function Auth() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {isLogin && (
+                <div className="text-right">
+                  <ForgotPasswordDialog />
+                </div>
+              )}
             </div>
 
             <Button 
