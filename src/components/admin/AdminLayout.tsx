@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,26 +21,43 @@ interface AdminLayoutProps {
   currentPage?: string;
 }
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-  { icon: Users, label: 'Pacientes', path: '/admin/patients' },
-  { icon: Calendar, label: 'Aplicações', path: '/admin/applications' },
-  { icon: CreditCard, label: 'Financeiro', path: '/admin/financial' },
-  { icon: Pill, label: 'Medicações', path: '/admin/medications' },
-  { icon: Stethoscope, label: 'Avaliações', path: '/admin/evaluations' },
-  { icon: MessageCircle, label: 'Dúvidas', path: '/admin/questions' },
+const allNavItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', requiresFinancial: false },
+  { icon: Users, label: 'Pacientes', path: '/admin/patients', requiresFinancial: false },
+  { icon: Calendar, label: 'Aplicações', path: '/admin/applications', requiresFinancial: false },
+  { icon: CreditCard, label: 'Financeiro', path: '/admin/financial', requiresFinancial: true },
+  { icon: Pill, label: 'Medicações', path: '/admin/medications', requiresFinancial: false },
+  { icon: Stethoscope, label: 'Avaliações', path: '/admin/evaluations', requiresFinancial: false },
+  { icon: MessageCircle, label: 'Dúvidas', path: '/admin/questions', requiresFinancial: false },
 ];
 
 export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
-  const { isAdmin, loading } = useAdmin();
+  const { isAdmin, isMaster, hasFinancialAccess, loading } = useAdmin();
   const { signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Filter nav items based on financial access
+  const navItems = useMemo(() => {
+    return allNavItems.filter(item => {
+      if (item.requiresFinancial) {
+        return hasFinancialAccess;
+      }
+      return true;
+    });
+  }, [hasFinancialAccess]);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate('/dashboard');
     }
   }, [isAdmin, loading, navigate]);
+
+  // Redirect from financial page if no access
+  useEffect(() => {
+    if (!loading && currentPage === '/admin/financial' && !hasFinancialAccess) {
+      navigate('/admin');
+    }
+  }, [hasFinancialAccess, loading, currentPage, navigate]);
 
   if (loading) {
     return (
@@ -69,7 +86,10 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="font-display font-bold text-lg">Painel Admin</h1>
+              <h1 className="font-display font-bold text-lg">
+                Painel Admin
+                {isMaster && <span className="text-warning ml-1 text-xs">★</span>}
+              </h1>
               <p className="text-xs text-primary">Método 3C Instituto</p>
             </div>
           </div>
