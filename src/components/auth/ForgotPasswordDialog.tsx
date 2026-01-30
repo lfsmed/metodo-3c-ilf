@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -16,6 +16,20 @@ import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Email inválido');
+
+const TriggerButton = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  (props, ref) => (
+    <button
+      ref={ref}
+      type="button"
+      className="text-sm text-primary hover:underline"
+      {...props}
+    >
+      Esqueceu sua senha?
+    </button>
+  )
+);
+TriggerButton.displayName = 'TriggerButton';
 
 export function ForgotPasswordDialog() {
   const [open, setOpen] = useState(false);
@@ -74,12 +88,7 @@ export function ForgotPasswordDialog() {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="text-sm text-primary hover:underline"
-        >
-          Esqueceu sua senha?
-        </button>
+        <TriggerButton />
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -141,9 +150,7 @@ export function ForgotPasswordDialog() {
                 className="flex-1"
                 disabled={loading}
               >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : null}
+                {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 Enviar
               </Button>
             </div>
