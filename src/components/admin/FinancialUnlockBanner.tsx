@@ -11,6 +11,7 @@ interface UnlockRequest {
   status: 'pending' | 'approved' | 'denied';
   requested_at: string;
   responded_at: string | null;
+  expires_at: string | null;
 }
 
 interface FinancialUnlockBannerProps {
@@ -30,9 +31,33 @@ export function FinancialUnlockBanner({ onUnlockStatusChange }: FinancialUnlockB
     }
   }, [user]);
 
+  // Check if unlock is valid (approved and not expired)
+  const isUnlockValid = () => {
+    if (request?.status !== 'approved') return false;
+    if (!request.expires_at) return true; // Legacy approvals without expiration
+    return new Date(request.expires_at) > new Date();
+  };
+
   useEffect(() => {
-    onUnlockStatusChange(request?.status === 'approved');
+    onUnlockStatusChange(isUnlockValid());
   }, [request, onUnlockStatusChange]);
+
+  // Calculate remaining time
+  const getRemainingTime = () => {
+    if (!request?.expires_at) return null;
+    const expiresAt = new Date(request.expires_at);
+    const now = new Date();
+    const diffMs = expiresAt.getTime() - now.getTime();
+    if (diffMs <= 0) return null;
+    
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min restantes`;
+    }
+    return `${minutes}min restantes`;
+  };
 
   const fetchUnlockRequest = async () => {
     if (!user) return;
@@ -86,17 +111,44 @@ export function FinancialUnlockBanner({ onUnlockStatusChange }: FinancialUnlockB
     return null;
   }
 
-  // If approved, show success banner briefly or just return null
-  if (request?.status === 'approved') {
+  // If approved and valid, show success banner with remaining time
+  if (isUnlockValid()) {
+    const remainingTime = getRemainingTime();
     return (
       <Card className="border-success/30 bg-success/10">
         <CardContent className="py-3 px-4 flex items-center gap-3">
           <Unlock className="w-5 h-5 text-success" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-success">Edição habilitada</p>
-            <p className="text-xs text-muted-foreground">Você tem permissão para editar itens financeiros.</p>
+            <p className="text-sm font-medium text-success">Edição de valores habilitada</p>
+            <p className="text-xs text-muted-foreground">
+              Você pode editar valores. {remainingTime && <span className="text-warning">({remainingTime})</span>}
+            </p>
           </div>
           <CheckCircle className="w-5 h-5 text-success" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If approved but expired, show expired state
+  if (request?.status === 'approved' && !isUnlockValid()) {
+    return (
+      <Card className="border-warning/30 bg-warning/10">
+        <CardContent className="py-3 px-4 flex items-center gap-3">
+          <Clock className="w-5 h-5 text-warning" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-warning">Acesso expirado</p>
+            <p className="text-xs text-muted-foreground">O tempo de edição expirou. Solicite novamente.</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-warning/50 text-warning hover:bg-warning/10"
+            onClick={handleRequestUnlock}
+            disabled={requesting}
+          >
+            {requesting ? 'Enviando...' : 'Solicitar Novamente'}
+          </Button>
         </CardContent>
       </Card>
     );
@@ -119,21 +171,20 @@ export function FinancialUnlockBanner({ onUnlockStatusChange }: FinancialUnlockB
 
   // If denied or no request, show lock state
   return (
-    <Card className="border-destructive/30 bg-destructive/10">
+    <Card className="border-muted/50 bg-muted/20">
       <CardContent className="py-3 px-4 flex items-center gap-3">
-        <Lock className="w-5 h-5 text-destructive" />
+        <Lock className="w-5 h-5 text-muted-foreground" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-destructive">Edição bloqueada</p>
+          <p className="text-sm font-medium text-muted-foreground">Edição de valores bloqueada</p>
           <p className="text-xs text-muted-foreground">
             {request?.status === 'denied' 
-              ? 'Sua solicitação foi negada. Você pode solicitar novamente.' 
-              : 'Solicite desbloqueio para editar itens financeiros.'}
+              ? 'Solicitação negada. Você pode criar, excluir e alterar status normalmente.' 
+              : 'Solicite desbloqueio para editar valores. Outras funções estão liberadas.'}
           </p>
         </div>
         <Button
           size="sm"
           variant="outline"
-          className="border-destructive/50 text-destructive hover:bg-destructive/10"
           onClick={handleRequestUnlock}
           disabled={requesting}
         >

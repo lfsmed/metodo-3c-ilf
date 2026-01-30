@@ -68,13 +68,14 @@ export default function AdminFinancial() {
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
+  const [isAmountEditUnlocked, setIsAmountEditUnlocked] = useState(false);
 
-  // Determine if user can edit (master always can, admin only if unlocked)
-  const canEdit = isMaster || isEditingUnlocked;
+  // Determine if user can edit amounts (master always can, admin only if unlocked)
+  // Other actions (create, delete, status change) are always allowed for financial users
+  const canEditAmount = isMaster || isAmountEditUnlocked;
 
   const handleUnlockStatusChange = useCallback((unlocked: boolean) => {
-    setIsEditingUnlocked(unlocked);
+    setIsAmountEditUnlocked(unlocked);
   }, []);
 
   // Redirect if no financial access
@@ -335,8 +336,8 @@ export default function AdminFinancial() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="icon" className="gradient-primary" disabled={!canEdit}>
-                {canEdit ? <Plus className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+              <Button size="icon" className="gradient-primary">
+                <Plus className="w-5 h-5" />
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -484,7 +485,6 @@ export default function AdminFinancial() {
                       <Select 
                         value={payment.status} 
                         onValueChange={(value) => handleStatusChange(payment.id, value)}
-                        disabled={!canEdit}
                       >
                         <SelectTrigger className="w-32 h-8">
                           <StatusBadge status={payment.status} />
@@ -501,16 +501,16 @@ export default function AdminFinancial() {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleEdit(payment)}
-                          disabled={!canEdit}
+                          disabled={!canEditAmount}
+                          title={canEditAmount ? 'Editar valor' : 'Solicite desbloqueio para editar valores'}
                         >
-                          {canEdit ? <Pencil className="w-4 h-4" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
+                          {canEditAmount ? <Pencil className="w-4 h-4" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleDelete(payment.id)}
-                          disabled={!canEdit}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
