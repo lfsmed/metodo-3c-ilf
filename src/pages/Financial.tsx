@@ -76,27 +76,38 @@ export default function Financial() {
     );
   }
 
-  const PaymentCard = ({ payment }: { payment: Payment }) => (
-    <div className="card-elevated p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="font-medium font-display">
-            {formatCurrency(Number(payment.amount))}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {payment.description || 'Pagamento'}
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            {payment.status === 'paid' 
-              ? `Pago em ${format(parseISO(payment.paid_date!), "dd/MM/yyyy", { locale: ptBR })}`
-              : `Vence em ${format(parseISO(payment.due_date), "dd/MM/yyyy", { locale: ptBR })}`
-            }
-          </p>
+  const PaymentCard = ({ payment }: { payment: Payment }) => {
+    const getDateText = () => {
+      try {
+        if (payment.status === 'paid' && payment.paid_date) {
+          return `Pago em ${format(parseISO(payment.paid_date), "dd/MM/yyyy", { locale: ptBR })}`;
+        }
+        return `Vence em ${format(parseISO(payment.due_date), "dd/MM/yyyy", { locale: ptBR })}`;
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Data indisponível';
+      }
+    };
+
+    return (
+      <div className="card-elevated p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="font-medium font-display">
+              {formatCurrency(Number(payment.amount))}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {payment.description || 'Pagamento'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              {getDateText()}
+            </p>
+          </div>
+          <StatusBadge status={payment.status} />
         </div>
-        <StatusBadge status={payment.status} />
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <AppLayout>
