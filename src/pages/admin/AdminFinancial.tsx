@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { PatientSelector } from '@/components/admin/PatientSelector';
 import { EditPaymentDialog } from '@/components/admin/EditPaymentDialog';
+import { FinancialUnlockBanner } from '@/components/admin/FinancialUnlockBanner';
+import { UnlockRequestsManager } from '@/components/admin/UnlockRequestsManager';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -26,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, CreditCard, Trash2, Pencil } from 'lucide-react';
+import { Plus, CreditCard, Trash2, Pencil, Lock } from 'lucide-react';
 import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -50,7 +52,7 @@ interface Profile {
 export default function AdminFinancial() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasFinancialAccess, loading: adminLoading } = useAdmin();
+  const { hasFinancialAccess, isMaster, loading: adminLoading } = useAdmin();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,6 +68,14 @@ export default function AdminFinancial() {
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
+
+  // Determine if user can edit (master always can, admin only if unlocked)
+  const canEdit = isMaster || isEditingUnlocked;
+
+  const handleUnlockStatusChange = useCallback((unlocked: boolean) => {
+    setIsEditingUnlocked(unlocked);
+  }, []);
 
   // Redirect if no financial access
   useEffect(() => {
@@ -325,8 +335,8 @@ export default function AdminFinancial() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="icon" className="gradient-primary">
-                <Plus className="w-5 h-5" />
+              <Button size="icon" className="gradient-primary" disabled={!canEdit}>
+                {canEdit ? <Plus className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -436,6 +446,16 @@ export default function AdminFinancial() {
           </Dialog>
         </div>
 
+        {/* Show unlock banner for admins (not masters) */}
+        {!isMaster && hasFinancialAccess && (
+          <FinancialUnlockBanner onUnlockStatusChange={handleUnlockStatusChange} />
+        )}
+
+        {/* Show unlock requests manager for masters */}
+        {isMaster && (
+          <UnlockRequestsManager />
+        )}
+
         <div className="space-y-3">
           {payments.length === 0 ? (
             <Card className="card-elevated">
@@ -461,7 +481,11 @@ export default function AdminFinancial() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Select value={payment.status} onValueChange={(value) => handleStatusChange(payment.id, value)}>
+                      <Select 
+                        value={payment.status} 
+                        onValueChange={(value) => handleStatusChange(payment.id, value)}
+                        disabled={!canEdit}
+                      >
                         <SelectTrigger className="w-32 h-8">
                           <StatusBadge status={payment.status} />
                         </SelectTrigger>
@@ -477,14 +501,16 @@ export default function AdminFinancial() {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleEdit(payment)}
+                          disabled={!canEdit}
                         >
-                          <Pencil className="w-4 h-4" />
+                          {canEdit ? <Pencil className="w-4 h-4" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleDelete(payment.id)}
+                          disabled={!canEdit}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
