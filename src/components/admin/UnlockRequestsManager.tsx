@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Clock, User } from 'lucide-react';
+import { Check, X, Clock, User, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -115,7 +115,31 @@ export function UnlockRequestsManager() {
     }
   };
 
+  const handleBlock = async (requestId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('financial_unlock_requests')
+        .update({
+          status: 'denied',
+          responded_at: new Date().toISOString(),
+          responded_by: user.id,
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast({ title: 'Acesso bloqueado com sucesso!' });
+      fetchRequests();
+    } catch (error) {
+      console.error('Error blocking request:', error);
+      toast({ title: 'Erro ao bloquear acesso', variant: 'destructive' });
+    }
+  };
+
   const pendingRequests = requests.filter(r => r.status === 'pending');
+  const approvedRequests = requests.filter(r => r.status === 'approved');
   const resolvedRequests = requests.filter(r => r.status !== 'pending');
 
   if (loading) {
@@ -181,13 +205,53 @@ export function UnlockRequestsManager() {
         </Card>
       )}
 
-      {resolvedRequests.length > 0 && (
-        <Card className="card-elevated">
+      {approvedRequests.length > 0 && (
+        <Card className="card-elevated border-success/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Histórico de Solicitações</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Check className="w-5 h-5 text-success" />
+              Acessos Liberados ({approvedRequests.length})
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {resolvedRequests.slice(0, 10).map((request) => (
+            {approvedRequests.map((request) => (
+              <div
+                key={request.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-background">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{request.requester_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Aprovado em {request.responded_at && format(parseISO(request.responded_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                  onClick={() => handleBlock(request.id)}
+                >
+                  <Lock className="w-4 h-4 mr-1" />
+                  Bloquear
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {resolvedRequests.filter(r => r.status === 'denied').length > 0 && (
+        <Card className="card-elevated">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Histórico de Negados/Bloqueados</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {resolvedRequests.filter(r => r.status === 'denied').slice(0, 10).map((request) => (
               <div
                 key={request.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
@@ -203,9 +267,7 @@ export function UnlockRequestsManager() {
                     </p>
                   </div>
                 </div>
-                <Badge variant={request.status === 'approved' ? 'default' : 'destructive'}>
-                  {request.status === 'approved' ? 'Aprovado' : 'Negado'}
-                </Badge>
+                <Badge variant="destructive">Bloqueado</Badge>
               </div>
             ))}
           </CardContent>
