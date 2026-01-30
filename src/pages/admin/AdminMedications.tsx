@@ -125,7 +125,7 @@ export default function AdminMedications() {
         .from('medications')
         .select('*')
         .order('is_active', { ascending: false })
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: true });
 
       if (medsError) throw medsError;
 

@@ -46,7 +46,7 @@ export default function Medications() {
         .select('*')
         .eq('user_id', user.id)
         .order('is_active', { ascending: false })
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: true });
 
       setMedications((data as Medication[]) || []);
     } catch (error) {

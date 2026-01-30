@@ -45,7 +45,7 @@ export default function Financial() {
         .from('payments')
         .select('*')
         .eq('user_id', user.id)
-        .order('due_date', { ascending: false });
+        .order('due_date', { ascending: true });
 
       setPayments((data as Payment[]) || []);
     } catch (error) {

@@ -86,7 +86,7 @@ export default function AdminApplications() {
       const { data: appsData, error: appsError } = await supabase
         .from('applications')
         .select('*')
-        .order('application_date', { ascending: false });
+        .order('application_date', { ascending: true });
 
       if (appsError) throw appsError;
 
