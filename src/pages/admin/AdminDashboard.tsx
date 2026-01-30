@@ -287,7 +287,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {evaluation.patientName?.split(' ').slice(0, 2).join(' ')}
+                          {evaluation.patientName?.split(' ').slice(0, 3).join(' ')}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {evaluation.notes || 'Avaliação médica'}
