@@ -29,7 +29,7 @@ export function Header() {
           <img 
             src={logo} 
             alt="Instituto Luiz Fernando" 
-            className="h-10 w-auto"
+            className="h-14 w-auto"
           />
         </div>
 
