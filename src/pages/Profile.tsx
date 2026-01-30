@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ChangePasswordSection } from '@/components/profile/ChangePasswordSection';
 
 interface Profile {
   full_name: string;
@@ -207,6 +208,9 @@ export default function ProfilePage() {
             <InfoRow icon={MapPin} label="Endereço" value={profile?.address || null} field="address" />
           </div>
         </div>
+
+        {/* Change Password Section */}
+        <ChangePasswordSection />
 
         {editing && (
           <Button 

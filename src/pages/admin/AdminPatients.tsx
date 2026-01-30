@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CreatePatientDialog } from '@/components/admin/CreatePatientDialog';
 import { EditPatientDialog } from '@/components/admin/EditPatientDialog';
+import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, User, Mail, Phone, Calendar, MapPin, Pencil, Shield } from 'lucide-react';
+import { Search, User, Mail, Phone, Calendar, MapPin, Pencil, Shield, KeyRound } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -39,6 +40,8 @@ export default function AdminPatients() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [togglingAdmin, setTogglingAdmin] = useState(false);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [patientToResetPassword, setPatientToResetPassword] = useState<Patient | null>(null);
 
   useEffect(() => {
     fetchPatients();
@@ -197,6 +200,17 @@ export default function AdminPatients() {
                     variant="outline" 
                     size="sm" 
                     onClick={() => {
+                      setPatientToResetPassword(selectedPatient);
+                      setResetPasswordDialogOpen(true);
+                    }}
+                  >
+                    <KeyRound className="w-4 h-4 mr-1" />
+                    Senha
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
                       setPatientToEdit(selectedPatient);
                       setEditDialogOpen(true);
                     }}
@@ -324,6 +338,12 @@ export default function AdminPatients() {
                 });
             }
           }}
+        />
+
+        <ResetPasswordDialog
+          patient={patientToResetPassword}
+          open={resetPasswordDialogOpen}
+          onOpenChange={setResetPasswordDialogOpen}
         />
       </div>
     </AdminLayout>
