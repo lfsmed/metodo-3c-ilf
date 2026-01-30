@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface Application {
   id: string;
   application_date: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'missed';
   notes: string | null;
 }
 
@@ -57,7 +57,10 @@ export default function Applications() {
     app => app.status === 'scheduled' && isAfter(parseISO(app.application_date), today)
   );
   const pastApplications = applications.filter(
-    app => app.status === 'completed' || isBefore(parseISO(app.application_date), today)
+    app => app.status === 'completed' || (app.status !== 'missed' && app.status !== 'cancelled' && isBefore(parseISO(app.application_date), today))
+  );
+  const missedApplications = applications.filter(
+    app => app.status === 'missed'
   );
 
   if (authLoading || loading) {
@@ -120,6 +123,9 @@ export default function Applications() {
             <TabsTrigger value="past" className="flex-1">
               Realizadas ({pastApplications.length})
             </TabsTrigger>
+            <TabsTrigger value="missed" className="flex-1">
+              Faltas ({missedApplications.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="future" className="space-y-3 mt-4">
@@ -143,6 +149,19 @@ export default function Applications() {
               </div>
             ) : (
               pastApplications.map(app => (
+                <ApplicationCard key={app.id} app={app} />
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="missed" className="space-y-3 mt-4">
+            {missedApplications.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-14 h-14 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhuma falta registrada</p>
+              </div>
+            ) : (
+              missedApplications.map(app => (
                 <ApplicationCard key={app.id} app={app} />
               ))
             )}
