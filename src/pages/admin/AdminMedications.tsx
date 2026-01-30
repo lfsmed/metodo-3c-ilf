@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { PatientSelector } from '@/components/admin/PatientSelector';
+import { EditMedicationDialog } from '@/components/admin/EditMedicationDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pill, Trash2 } from 'lucide-react';
+import { Plus, Pill, Trash2, Pencil } from 'lucide-react';
 import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,8 @@ export default function AdminMedications() {
   const [recurrenceFrequency, setRecurrenceFrequency] = useState('1x semana');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
 
   useEffect(() => {
     fetchMedications();
@@ -256,6 +259,11 @@ export default function AdminMedications() {
     setPreviewDates([]);
   };
 
+  const handleEdit = (med: Medication) => {
+    setEditingMedication(med);
+    setEditDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <AdminLayout currentPage="/admin/medications">
@@ -442,14 +450,24 @@ export default function AdminMedications() {
                           onCheckedChange={() => handleToggleActive(med.id, med.is_active)}
                         />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(med.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(med)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(med.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   {med.notes && (
@@ -460,6 +478,14 @@ export default function AdminMedications() {
             ))
           )}
         </div>
+
+        <EditMedicationDialog
+          medication={editingMedication}
+          allMedications={medications}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={fetchMedications}
+        />
       </div>
     </AdminLayout>
   );
