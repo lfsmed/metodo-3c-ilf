@@ -25,7 +25,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container flex items-center justify-between h-16 px-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mt-2">
           <img 
             src={logo} 
             alt="Instituto Luiz Fernando" 
