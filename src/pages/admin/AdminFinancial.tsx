@@ -393,9 +393,9 @@ export default function AdminFinancial() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="pending">A Vencer</SelectItem>
                       <SelectItem value="paid">Pago</SelectItem>
-                      <SelectItem value="overdue">Atrasado</SelectItem>
+                      <SelectItem value="overdue">Vencido</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -445,9 +445,9 @@ export default function AdminFinancial() {
                           <StatusBadge status={payment.status} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="pending">A Vencer</SelectItem>
                           <SelectItem value="paid">Pago</SelectItem>
-                          <SelectItem value="overdue">Atrasado</SelectItem>
+                          <SelectItem value="overdue">Vencido</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
