@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { PatientSelector } from '@/components/admin/PatientSelector';
+import { EditPaymentDialog } from '@/components/admin/EditPaymentDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, CreditCard, Trash2 } from 'lucide-react';
+import { Plus, CreditCard, Trash2, Pencil } from 'lucide-react';
 import { format, parseISO, addDays, addWeeks, addMonths, isBefore, isEqual, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +60,8 @@ export default function AdminFinancial() {
   const [frequency, setFrequency] = useState('1x semana');
   const [endDate, setEndDate] = useState('');
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -278,6 +281,11 @@ export default function AdminFinancial() {
     setPreviewDates([]);
   };
 
+  const handleEdit = (payment: Payment) => {
+    setEditingPayment(payment);
+    setEditDialogOpen(true);
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
@@ -450,14 +458,24 @@ export default function AdminFinancial() {
                           <SelectItem value="overdue">Vencido</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(payment.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(payment)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(payment.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   {payment.description && (
@@ -468,6 +486,13 @@ export default function AdminFinancial() {
             ))
           )}
         </div>
+
+        <EditPaymentDialog
+          payment={editingPayment}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={fetchPayments}
+        />
       </div>
     </AdminLayout>
   );
