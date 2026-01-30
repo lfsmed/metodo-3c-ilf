@@ -339,6 +339,7 @@ export default function AdminApplications() {
                     <SelectContent>
                       <SelectItem value="scheduled">Agendada</SelectItem>
                       <SelectItem value="completed">Realizada</SelectItem>
+                      <SelectItem value="missed">Faltou</SelectItem>
                       <SelectItem value="cancelled">Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
@@ -393,6 +394,7 @@ export default function AdminApplications() {
                         <SelectContent>
                           <SelectItem value="scheduled">Agendada</SelectItem>
                           <SelectItem value="completed">Realizada</SelectItem>
+                          <SelectItem value="missed">Faltou</SelectItem>
                           <SelectItem value="cancelled">Cancelada</SelectItem>
                         </SelectContent>
                       </Select>
